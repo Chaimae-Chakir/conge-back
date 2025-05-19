@@ -1,6 +1,7 @@
 package agilisys.conge.service;
 
-import agilisys.conge.dto.LeaveRequestDTO;
+import agilisys.conge.dto.LeaveRequestRequestDTO;
+import agilisys.conge.dto.LeaveRequestResponseDTO;
 import agilisys.conge.entity.LeaveRequest;
 import agilisys.conge.entity.LeaveStatus;
 import agilisys.conge.mapper.LeaveRequestMapper;
@@ -32,9 +33,9 @@ public class LeaveRequestService {
     private static final String PROCESS_DEFINITION_KEY = "leaveRequestProcess";
     private static final String REVIEW_TASK_NAME = "Review Leave Request";
 
-    public List<LeaveRequestDTO> getAllLeaveRequests() {
+    public List<LeaveRequestResponseDTO> getAllLeaveRequests() {
         return leaveRequestRepository.findAll().stream()
-                .map(leaveRequestMapper::toDto)
+                .map(leaveRequestMapper::toResponseDto)
                 .collect(Collectors.toList());
     }
 
@@ -58,15 +59,15 @@ public class LeaveRequestService {
     }
 
     @Transactional
-    public LeaveRequestDTO submitLeaveRequest(LeaveRequestDTO leaveRequestDTO, String employeeId, String managerId) {
-        log.info("Submitting leave request for employee: {} to manager: {}", employeeId, managerId);
-        LeaveRequest leaveRequest = leaveRequestMapper.toEntity(leaveRequestDTO);
-        leaveRequest.setEmployeeId(Long.parseLong(employeeId));
+    public LeaveRequestResponseDTO submitLeaveRequest(LeaveRequestRequestDTO leaveRequestRequestDTO, String employeeName, String managerId) {
+        log.info("Submitting leave request for employee: {} to manager: {}", employeeName, managerId);
+        LeaveRequest leaveRequest = leaveRequestMapper.toEntity(leaveRequestRequestDTO);
+        leaveRequest.setEmployeeName(employeeName);
         leaveRequest.setStatus(LeaveStatus.PENDING);
         leaveRequest = leaveRequestRepository.save(leaveRequest);
         Map<String, Object> variables = new HashMap<>();
         variables.put("leaveRequestId", leaveRequest.getId().toString());
-        variables.put("employeeId", employeeId);
+        variables.put("employeeName", employeeName);
         variables.put("manager", managerId);
         variables.put("startDate", leaveRequest.getStartDate());
         variables.put("endDate", leaveRequest.getEndDate());
@@ -89,11 +90,11 @@ public class LeaveRequestService {
                     .map(task -> String.format("Task[id=%s, name=%s, assignee=%s]", 
                         task.getId(), task.getName(), task.getAssignee()))
                     .collect(Collectors.joining(", ")));
-        return leaveRequestMapper.toDto(leaveRequest);
+        return leaveRequestMapper.toResponseDto(leaveRequest);
     }
 
     @Transactional
-    public LeaveRequestDTO approveLeaveRequest(String leaveRequestId, String managerId) {
+    public LeaveRequestResponseDTO approveLeaveRequest(String leaveRequestId, String managerId) {
         log.info("Approving leave request: {} by manager: {}", leaveRequestId, managerId);
         LeaveRequest leaveRequest = leaveRequestRepository.findById(Long.parseLong(leaveRequestId))
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
@@ -138,11 +139,11 @@ public class LeaveRequestService {
         leaveRequest.setStatus(LeaveStatus.APPROVED);
         leaveRequest = leaveRequestRepository.save(leaveRequest);
         log.info("Leave request: {} approved successfully", leaveRequestId);
-        return leaveRequestMapper.toDto(leaveRequest);
+        return leaveRequestMapper.toResponseDto(leaveRequest);
     }
 
     @Transactional
-    public LeaveRequestDTO rejectLeaveRequest(String leaveRequestId, String managerId) {
+    public LeaveRequestResponseDTO rejectLeaveRequest(String leaveRequestId, String managerId) {
         log.info("Rejecting leave request: {} by manager: {}", leaveRequestId, managerId);
         LeaveRequest leaveRequest = leaveRequestRepository.findById(Long.parseLong(leaveRequestId))
                 .orElseThrow(() -> new RuntimeException("Leave request not found"));
@@ -187,6 +188,6 @@ public class LeaveRequestService {
         leaveRequest.setStatus(LeaveStatus.REJECTED);
         leaveRequest = leaveRequestRepository.save(leaveRequest);
         log.info("Leave request: {} rejected successfully", leaveRequestId);
-        return leaveRequestMapper.toDto(leaveRequest);
+        return leaveRequestMapper.toResponseDto(leaveRequest);
     }
 }

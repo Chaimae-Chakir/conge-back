@@ -1,6 +1,7 @@
 package agilisys.conge.controller;
 
-import agilisys.conge.dto.LeaveRequestDTO;
+import agilisys.conge.dto.LeaveRequestRequestDTO;
+import agilisys.conge.dto.LeaveRequestResponseDTO;
 import agilisys.conge.service.LeaveRequestService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,7 +18,7 @@ public class LeaveRequestController {
     private final LeaveRequestService leaveRequestService;
 
     @GetMapping
-    public ResponseEntity<List<LeaveRequestDTO>> getAllLeaveRequests() {
+    public ResponseEntity<List<LeaveRequestResponseDTO>> getAllLeaveRequests() {
         return ResponseEntity.ok(leaveRequestService.getAllLeaveRequests());
     }
 
@@ -28,24 +29,24 @@ public class LeaveRequestController {
     }
 
     @PostMapping
-    public ResponseEntity<LeaveRequestDTO> submitLeaveRequest(
-            @RequestBody LeaveRequestDTO leaveRequestDTO,
-            @RequestHeader("X-Employee-Id") String employeeId,
+    public ResponseEntity<LeaveRequestResponseDTO> submitLeaveRequest(
+            @RequestBody LeaveRequestRequestDTO leaveRequestRequestDTO,
+            @RequestHeader("X-Employee-Name") String employeeName,
             @RequestHeader("X-Manager-Id") String managerId) {
-        return ResponseEntity.ok(leaveRequestService.submitLeaveRequest(leaveRequestDTO, employeeId, managerId));
+        return ResponseEntity.ok(leaveRequestService.submitLeaveRequest(leaveRequestRequestDTO, employeeName, managerId));
     }
 
     @PostMapping("/{id}/approve")
-    public ResponseEntity<LeaveRequestDTO> approveLeaveRequest(
-            @PathVariable String id,
+    public ResponseEntity<LeaveRequestResponseDTO> approveLeaveRequest(
+            @PathVariable("id") String leaveRequestId,
             @RequestHeader("X-Manager-Id") String managerId) {
-        return ResponseEntity.ok(leaveRequestService.approveLeaveRequest(id, managerId));
+        return ResponseEntity.ok(leaveRequestService.approveLeaveRequest(leaveRequestId, managerId));
     }
 
     @PostMapping("/{id}/reject")
-    public ResponseEntity<LeaveRequestDTO> rejectLeaveRequest(
-            @PathVariable String id,
+    public ResponseEntity<LeaveRequestResponseDTO> rejectLeaveRequest(
+            @PathVariable("id") String leaveRequestId,
             @RequestHeader("X-Manager-Id") String managerId) {
-        return ResponseEntity.ok(leaveRequestService.rejectLeaveRequest(id, managerId));
+        return ResponseEntity.ok(leaveRequestService.rejectLeaveRequest(leaveRequestId, managerId));
     }
 } 

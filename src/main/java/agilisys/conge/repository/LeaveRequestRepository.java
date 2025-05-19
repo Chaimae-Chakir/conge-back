@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long> {
-    // Vous pouvez ajouter des méthodes personnalisées ici si nécessaire
+
 } 

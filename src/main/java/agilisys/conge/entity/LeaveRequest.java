@@ -12,8 +12,8 @@ public class LeaveRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "employee_id", nullable = false)
-    private Long employeeId;
+    @Column(name = "employee_name", nullable = false)
+    private String employeeName;
 
     @Column(name = "start_date", nullable = false)
     private LocalDate startDate;
@@ -21,10 +21,10 @@ public class LeaveRequest {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
-    @Column(nullable = false)
+    @Column(name = "reason", nullable = false)
     private String reason;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "status", nullable = false)
     private LeaveStatus status = LeaveStatus.PENDING;
-} 
+}

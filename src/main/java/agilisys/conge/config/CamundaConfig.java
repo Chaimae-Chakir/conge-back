@@ -22,7 +22,6 @@ public class CamundaConfig {
     @Bean
     public SpringProcessEngineConfiguration processEngineConfiguration(DataSource dataSource, PlatformTransactionManager transactionManager) {
         SpringProcessEngineConfiguration config = new SpringProcessEngineConfiguration();
-        
         config.setDataSource(dataSource);
         config.setTransactionManager(transactionManager);
         config.setDatabaseSchemaUpdate("true");
@@ -31,7 +30,6 @@ public class CamundaConfig {
         config.setHistoryTimeToLive("P30D");
         config.setMetricsEnabled(false);
         config.setProcessEngineName("default-engine");
-        
         // Déploiement automatique des fichiers BPMN
         Resource[] resources;
         try {
@@ -41,7 +39,6 @@ public class CamundaConfig {
         } catch (IOException e) {
             throw new RuntimeException("Erreur lors du chargement des fichiers BPMN", e);
         }
-        
         return config;
     }
 
