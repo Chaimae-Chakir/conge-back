@@ -6,19 +6,15 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@Component("notifyRejectionDelegate")
-public class NotifyRejectionDelegate implements JavaDelegate {
+@Component
+public class SubmitLeaveRequestDelegate implements JavaDelegate {
     
     @Override
     public void execute(DelegateExecution execution) {
         Long leaveRequestId = (Long) execution.getVariable("leaveRequestId");
         String employeeId = (String) execution.getVariable("initiator");
-        String reason = (String) execution.getVariable("rejectionReason");
         
-        log.info("Notifying employee {} about rejection of leave request {}. Reason: {}", 
-                employeeId, leaveRequestId, reason);
-        
-        // TODO: Implement actual notification logic (email, notification system, etc.)
-        execution.setVariable("notificationSent", true);
+        log.info("Processing submit for leave request {} by employee {}", leaveRequestId, employeeId);
+        // The delegate will complete automatically after this method returns
     }
-}
+} 

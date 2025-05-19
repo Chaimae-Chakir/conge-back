@@ -27,6 +27,4 @@ public class LeaveRequest {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LeaveStatus status = LeaveStatus.PENDING;
-
-    private String managerComment;
 } 
