@@ -1,5 +1,6 @@
 package agilisys.conge.service;
 
+import agilisys.conge.constant.LeaveConstants;
 import agilisys.conge.entity.LeaveRequest;
 import agilisys.conge.entity.LeaveStatus;
 import agilisys.conge.repository.LeaveRequestRepository;
@@ -17,9 +18,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class CheckAvailableDaysDelegate implements JavaDelegate {
-
     private final LeaveRequestRepository leaveRequestRepository;
-    private static final int ANNUAL_LEAVE_DAYS = 25;
 
     @Override
     public void execute(DelegateExecution execution) throws Exception {
@@ -31,40 +30,56 @@ public class CheckAvailableDaysDelegate implements JavaDelegate {
         log.info("Checking available leave days for employee: {} requesting {} days", 
                 employeeName, requestedDays);
 
-        // Récupérer toutes les demandes de congé approuvées pour l'employé
+        long takenDays = calculateTakenDays(employeeName);
+        long availableDays = calculateAvailableDays(takenDays);
+
+        log.info("Employee {} has {} days available out of {} annual days", 
+                employeeName, availableDays, LeaveConstants.ANNUAL_LEAVE_DAYS);
+
+        if (!validateAvailableDays(execution, employeeName, requestedDays, availableDays)) {
+            return;
+        }
+
+        setValidRequest(execution, availableDays, takenDays);
+        log.info("Leave days check successful for employee: {}", employeeName);
+    }
+
+    private long calculateTakenDays(String employeeName) {
         List<LeaveRequest> approvedRequests = leaveRequestRepository
                 .findByEmployeeNameAndStatus(employeeName, LeaveStatus.APPROVED);
 
-        // Calculer les jours déjà pris
-        long takenDays = approvedRequests.stream()
+        return approvedRequests.stream()
                 .mapToLong(request -> ChronoUnit.DAYS.between(
                         request.getStartDate(),
                         request.getEndDate()))
                 .sum();
+    }
 
-        // Calculer les jours disponibles
-        long availableDays = ANNUAL_LEAVE_DAYS - takenDays;
+    private long calculateAvailableDays(long takenDays) {
+        return LeaveConstants.ANNUAL_LEAVE_DAYS - takenDays;
+    }
 
-        log.info("Employee {} has {} days available out of {} annual days", 
-                employeeName, availableDays, ANNUAL_LEAVE_DAYS);
-
-        // Vérifier si l'employé a assez de jours disponibles
+    private boolean validateAvailableDays(DelegateExecution execution, String employeeName, 
+            long requestedDays, long availableDays) {
         if (requestedDays > availableDays) {
             log.warn("Employee {} does not have enough leave days. Requested: {}, Available: {}", 
                     employeeName, requestedDays, availableDays);
-            execution.setVariable("isValid", false);
-            execution.setVariable("validationMessage", 
-                    String.format("Not enough leave days available. Requested: %d, Available: %d", 
-                            requestedDays, availableDays));
-            return;
+            setInvalidRequest(execution, String.format(LeaveConstants.INSUFFICIENT_DAYS, 
+                    requestedDays, availableDays));
+            return false;
         }
+        return true;
+    }
 
-        // Si la validation passe
+    private void setValidRequest(DelegateExecution execution, long availableDays, long takenDays) {
         execution.setVariable("isValid", true);
-        execution.setVariable("validationMessage", "Enough leave days available");
+        execution.setVariable("validationMessage", LeaveConstants.SUCCESS);
         execution.setVariable("availableDays", availableDays);
         execution.setVariable("takenDays", takenDays);
-        
-        log.info("Leave days check successful for employee: {}", employeeName);
+    }
+
+    private void setInvalidRequest(DelegateExecution execution, String message) {
+        execution.setVariable("isValid", false);
+        execution.setVariable("validationMessage", message);
     }
 } 
