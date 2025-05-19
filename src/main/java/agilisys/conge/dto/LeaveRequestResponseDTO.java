@@ -4,6 +4,7 @@ import agilisys.conge.entity.LeaveStatus;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 public class LeaveRequestResponseDTO {
@@ -13,4 +14,5 @@ public class LeaveRequestResponseDTO {
     private LocalDate endDate;
     private String reason;
     private LeaveStatus status;
+    private LocalDateTime createdAt;
 } 

@@ -2,11 +2,15 @@ package agilisys.conge.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Entity
 @Table(name = "leave_requests")
+@EntityListeners(AuditingEntityListener.class)
 public class LeaveRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,4 +31,8 @@ public class LeaveRequest {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private LeaveStatus status = LeaveStatus.PENDING;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
 }
