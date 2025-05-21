@@ -3,5 +3,6 @@ package agilisys.conge.entity;
 public enum LeaveStatus {
     PENDING,
     APPROVED,
-    REJECTED
+    REJECTED,
+    CANCELLED
 } 

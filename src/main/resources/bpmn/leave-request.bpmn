@@ -13,93 +13,55 @@
       <bpmn:outgoing>Flow_1</bpmn:outgoing>
     </bpmn:startEvent>
 
-    <bpmn:serviceTask id="validateRequest" name="Validate Request" 
-                      camunda:delegateExpression="${validateLeaveRequestDelegate}">
+    <bpmn:serviceTask id="submitRequest" name="Submit Leave Request" 
+                      camunda:delegateExpression="${leaveRequestProcessDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="taskType">CHECK_BALANCE</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_1</bpmn:incoming>
       <bpmn:outgoing>Flow_2</bpmn:outgoing>
     </bpmn:serviceTask>
 
-    <bpmn:serviceTask id="checkAvailableDays" name="Check Available Days"
-                      camunda:delegateExpression="${checkAvailableDaysDelegate}">
-      <bpmn:incoming>Flow_2</bpmn:incoming>
-      <bpmn:outgoing>Flow_3</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:exclusiveGateway id="validationGateway" name="Validation Decision">
-      <bpmn:incoming>Flow_3</bpmn:incoming>
-      <bpmn:outgoing>Flow_4</bpmn:outgoing>
-      <bpmn:outgoing>Flow_5</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-
     <bpmn:userTask id="reviewLeaveRequest" name="Review Leave Request" 
                    camunda:assignee="${manager}"
                    camunda:candidateGroups="managers">
-      <bpmn:extensionElements>
-        <camunda:taskListener event="create" class="agilisys.conge.service.ReviewLeaveRequestDelegate" />
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_4</bpmn:incoming>
-      <bpmn:outgoing>Flow_6</bpmn:outgoing>
+      <bpmn:incoming>Flow_2</bpmn:incoming>
+      <bpmn:outgoing>Flow_3</bpmn:outgoing>
     </bpmn:userTask>
 
-    <bpmn:serviceTask id="notifyInitialRejection" name="Notify Initial Rejection"
-                      camunda:delegateExpression="${notificationDelegate}">
+    <bpmn:serviceTask id="processDecision" name="Process Decision"
+                      camunda:delegateExpression="${leaveRequestProcessDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="taskType">UPDATE_BALANCE</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_3</bpmn:incoming>
+      <bpmn:outgoing>Flow_4</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:serviceTask id="notifyEmployee" name="Notify Employee"
+                      camunda:delegateExpression="${leaveRequestProcessDelegate}">
+      <bpmn:extensionElements>
+        <camunda:inputOutput>
+          <camunda:inputParameter name="taskType">NOTIFY_EMPLOYEE</camunda:inputParameter>
+        </camunda:inputOutput>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_4</bpmn:incoming>
+      <bpmn:outgoing>Flow_5</bpmn:outgoing>
+    </bpmn:serviceTask>
+
+    <bpmn:endEvent id="endEvent" name="Request Completed">
       <bpmn:incoming>Flow_5</bpmn:incoming>
-      <bpmn:outgoing>Flow_7</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:exclusiveGateway id="approvalGateway" name="Approval Decision">
-      <bpmn:incoming>Flow_6</bpmn:incoming>
-      <bpmn:outgoing>Flow_8</bpmn:outgoing>
-      <bpmn:outgoing>Flow_9</bpmn:outgoing>
-    </bpmn:exclusiveGateway>
-
-    <bpmn:serviceTask id="updateLeaveBalance" name="Update Leave Balance"
-                      camunda:delegateExpression="${updateLeaveBalanceDelegate}">
-      <bpmn:incoming>Flow_8</bpmn:incoming>
-      <bpmn:outgoing>Flow_10</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:serviceTask id="notifyApproval" name="Notify Approval"
-                      camunda:delegateExpression="${notificationDelegate}">
-      <bpmn:incoming>Flow_10</bpmn:incoming>
-      <bpmn:outgoing>Flow_11</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:serviceTask id="notifyRejection" name="Notify Rejection"
-                      camunda:delegateExpression="${notificationDelegate}">
-      <bpmn:incoming>Flow_9</bpmn:incoming>
-      <bpmn:outgoing>Flow_12</bpmn:outgoing>
-    </bpmn:serviceTask>
-
-    <bpmn:endEvent id="approvedEnd" name="Request Approved">
-      <bpmn:incoming>Flow_11</bpmn:incoming>
     </bpmn:endEvent>
 
-    <bpmn:endEvent id="rejectedEnd" name="Request Rejected">
-      <bpmn:incoming>Flow_12</bpmn:incoming>
-      <bpmn:incoming>Flow_7</bpmn:incoming>
-    </bpmn:endEvent>
-
-    <bpmn:sequenceFlow id="Flow_1" sourceRef="startEvent" targetRef="validateRequest" />
-    <bpmn:sequenceFlow id="Flow_2" sourceRef="validateRequest" targetRef="checkAvailableDays" />
-    <bpmn:sequenceFlow id="Flow_3" sourceRef="checkAvailableDays" targetRef="validationGateway" />
-    <bpmn:sequenceFlow id="Flow_4" sourceRef="validationGateway" targetRef="reviewLeaveRequest">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isValid == true}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_5" sourceRef="validationGateway" targetRef="notifyInitialRejection">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${isValid == false}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_6" sourceRef="reviewLeaveRequest" targetRef="approvalGateway" />
-    <bpmn:sequenceFlow id="Flow_7" sourceRef="notifyInitialRejection" targetRef="rejectedEnd" />
-    <bpmn:sequenceFlow id="Flow_8" sourceRef="approvalGateway" targetRef="updateLeaveBalance">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == true}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_9" sourceRef="approvalGateway" targetRef="notifyRejection">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${approved == false}</bpmn:conditionExpression>
-    </bpmn:sequenceFlow>
-    <bpmn:sequenceFlow id="Flow_10" sourceRef="updateLeaveBalance" targetRef="notifyApproval" />
-    <bpmn:sequenceFlow id="Flow_11" sourceRef="notifyApproval" targetRef="approvedEnd" />
-    <bpmn:sequenceFlow id="Flow_12" sourceRef="notifyRejection" targetRef="rejectedEnd" />
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="startEvent" targetRef="submitRequest" />
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="submitRequest" targetRef="reviewLeaveRequest" />
+    <bpmn:sequenceFlow id="Flow_3" sourceRef="reviewLeaveRequest" targetRef="processDecision" />
+    <bpmn:sequenceFlow id="Flow_4" sourceRef="processDecision" targetRef="notifyEmployee" />
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="notifyEmployee" targetRef="endEvent" />
   </bpmn:process>
 
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
@@ -107,38 +69,20 @@
       <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="startEvent">
         <dc:Bounds x="173" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_1_di" bpmnElement="validateRequest">
+      <bpmndi:BPMNShape id="Activity_1_di" bpmnElement="submitRequest">
         <dc:Bounds x="260" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_2_di" bpmnElement="checkAvailableDays">
+      <bpmndi:BPMNShape id="Activity_2_di" bpmnElement="reviewLeaveRequest">
         <dc:Bounds x="410" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_1_di" bpmnElement="validationGateway" isMarkerVisible="true">
-        <dc:Bounds x="560" y="95" width="50" height="50" />
+      <bpmndi:BPMNShape id="Activity_3_di" bpmnElement="processDecision">
+        <dc:Bounds x="560" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_3_di" bpmnElement="reviewLeaveRequest">
-        <dc:Bounds x="660" y="80" width="100" height="80" />
+      <bpmndi:BPMNShape id="Activity_4_di" bpmnElement="notifyEmployee">
+        <dc:Bounds x="710" y="80" width="100" height="80" />
       </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Gateway_2_di" bpmnElement="approvalGateway" isMarkerVisible="true">
-        <dc:Bounds x="810" y="95" width="50" height="50" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_4_di" bpmnElement="updateLeaveBalance">
-        <dc:Bounds x="910" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_5_di" bpmnElement="notifyApproval">
-        <dc:Bounds x="1060" y="80" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_notifyInitialRejection_di" bpmnElement="notifyInitialRejection">
-        <dc:Bounds x="660" y="200" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Activity_notifyRejection_di" bpmnElement="notifyRejection">
-        <dc:Bounds x="910" y="200" width="100" height="80" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_1_di" bpmnElement="approvedEnd">
-        <dc:Bounds x="1210" y="102" width="36" height="36" />
-      </bpmndi:BPMNShape>
-      <bpmndi:BPMNShape id="Event_2_di" bpmnElement="rejectedEnd">
-        <dc:Bounds x="1210" y="182" width="36" height="36" />
+      <bpmndi:BPMNShape id="Event_1_di" bpmnElement="endEvent">
+        <dc:Bounds x="862" y="102" width="36" height="36" />
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1">
         <di:waypoint x="209" y="120" />
@@ -153,42 +97,12 @@
         <di:waypoint x="560" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4">
-        <di:waypoint x="585" y="120" />
         <di:waypoint x="660" y="120" />
+        <di:waypoint x="710" y="120" />
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5">
-        <di:waypoint x="585" y="145" />
-        <di:waypoint x="585" y="200" />
-        <di:waypoint x="660" y="200" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6">
-        <di:waypoint x="760" y="120" />
         <di:waypoint x="810" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7">
-        <di:waypoint x="710" y="200" />
-        <di:waypoint x="1210" y="200" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8">
-        <di:waypoint x="835" y="120" />
-        <di:waypoint x="910" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9">
-        <di:waypoint x="835" y="145" />
-        <di:waypoint x="835" y="200" />
-        <di:waypoint x="910" y="200" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10">
-        <di:waypoint x="1010" y="120" />
-        <di:waypoint x="1060" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11">
-        <di:waypoint x="1160" y="120" />
-        <di:waypoint x="1210" y="120" />
-      </bpmndi:BPMNEdge>
-      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12">
-        <di:waypoint x="1010" y="200" />
-        <di:waypoint x="1210" y="200" />
+        <di:waypoint x="862" y="120" />
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>
