@@ -41,9 +41,4 @@ public class LeaveBalance {
         availableDays -= days;
         usedDays += days;
     }
-    
-    public void refundDays(int days) {
-        availableDays += days;
-        usedDays -= days;
-    }
 } 

@@ -14,7 +14,6 @@ import java.util.Map;
 @RequestMapping("/api/leave-requests")
 @RequiredArgsConstructor
 public class LeaveRequestController {
-
     private final LeaveRequestService leaveRequestService;
 
     @GetMapping

@@ -20,17 +20,10 @@ public class CamundaProcessService {
     private final RuntimeService runtimeService;
     private final TaskService taskService;
 
-    public ProcessInstance startLeaveRequestProcess(String processDefinitionKey, String businessKey, Map<String, Object> variables) {
-        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(
-                processDefinitionKey,
-                businessKey,
-                variables
-        );
-
+    public void startLeaveRequestProcess(String processDefinitionKey, String businessKey, Map<String, Object> variables) {
+        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey(processDefinitionKey, businessKey, variables);
         log.info("Started process {} with business key {} and variables {}",
                 processDefinitionKey, businessKey, variables);
-
-        return processInstance;
     }
 
     public Optional<Task> findActiveReviewTask(String processInstanceId) {
@@ -51,7 +44,7 @@ public class CamundaProcessService {
         // Search specifically for the review task using taskDefinitionKey
         Task task = taskService.createTaskQuery()
                 .processInstanceId(processInstanceId)
-                .taskDefinitionKey(ProcessConstants.Tasks.REVIEW_REQUEST)
+                .taskDefinitionKey(ProcessConstants.REVIEW_REQUEST)
                 .active()
                 .singleResult();
 
@@ -71,20 +64,14 @@ public class CamundaProcessService {
                 .processInstanceBusinessKey(businessKey)
                 .active()
                 .singleResult();
+
         if (processInstance == null) {
             log.warn("No active process instance found for business key: {}", businessKey);
-            // List all active processes for debugging
-            List<ProcessInstance> allActive = runtimeService.createProcessInstanceQuery()
-                    .active()
-                    .list();
-            log.info("Active process instances: {}",
-                    allActive.stream()
-                            .map(pi -> String.format("ID=%s, BusinessKey=%s", pi.getId(), pi.getBusinessKey()))
-                            .toList());
         } else {
             log.info("Found active process instance: {} for business key: {}",
                     processInstance.getId(), businessKey);
         }
+
         return Optional.ofNullable(processInstance);
     }
 
@@ -96,7 +83,7 @@ public class CamundaProcessService {
     public List<Task> getManagerTasks(String managerId) {
         return taskService.createTaskQuery()
                 .taskAssignee(managerId)
-                .taskDefinitionKey(ProcessConstants.Tasks.REVIEW_REQUEST)
+                .taskDefinitionKey(ProcessConstants.REVIEW_REQUEST)
                 .active()
                 .list();
     }

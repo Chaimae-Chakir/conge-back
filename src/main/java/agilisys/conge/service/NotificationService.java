@@ -14,7 +14,7 @@ public class NotificationService {
 
     public void notifyEmployee(String leaveRequestId, boolean approved) {
         // TODO: Implement email notification to employee
-        log.info("Notification sent to employee for leave request: {} - Status: {}", 
+        log.info("Notification sent to employee for leave request: {} - Status: {}",
                 leaveRequestId, approved ? "Approved" : "Rejected");
     }
-} 
+}
